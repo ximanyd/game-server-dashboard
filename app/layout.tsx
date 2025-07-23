@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
+import "./globals.css";
 
 export default function RootLayout({
   children,
