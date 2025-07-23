@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ServerIcon, PlayIcon, StopIcon, RefreshCwIcon } from "lucide-react";
+import { ServerIcon, PlayIcon, StopIcon, RefreshCwIcon, SettingsIcon, FileTextIcon } from "lucide-react";
+import { ServerLogs } from "@/components/ServerLogs";
+import { ServerConfig } from "@/components/ServerConfig";
 
 export default function Home() {
   const [servers, setServers] = useState([
@@ -11,6 +13,8 @@ export default function Home() {
     { id: 2, name: "CS2 Server", status: "stopped", players: 0, maxPlayers: 32, cpu: 0, memory: 0 },
     { id: 3, name: "Rust Server", status: "running", players: 8, maxPlayers: 20, cpu: 75, memory: 80 },
   ]);
+
+  const [activeTab, setActiveTab] = useState({});
 
   const handleServerAction = (serverId: number, action: string) => {
     // This would connect to a backend API in a real application
@@ -32,6 +36,13 @@ export default function Home() {
         ));
       }, 2000);
     }
+  };
+
+  const handleTabChange = (serverId: number, tab: string) => {
+    setActiveTab(prev => ({
+      ...prev,
+      [serverId]: tab
+    }));
   };
 
   return (
@@ -66,53 +77,90 @@ export default function Home() {
                   {server.players}/{server.maxPlayers} players online
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm">
-                      <span>CPU Usage</span>
-                      <span>{server.cpu}%</span>
+              
+              {/* Tab Navigation */}
+              <div className="flex border-b px-6">
+                <button
+                  className={`px-4 py-2 text-sm font-medium ${activeTab[server.id] === 'config' || activeTab[server.id] === 'logs' ? 'text-gray-500' : 'text-primary border-b-2 border-primary'}`}
+                  onClick={() => handleTabChange(server.id, 'overview')}
+                >
+                  Overview
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-medium ${activeTab[server.id] === 'config' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+                  onClick={() => handleTabChange(server.id, 'config')}
+                >
+                  <SettingsIcon className="mr-2 h-4 w-4 inline" />
+                  Configuration
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-medium ${activeTab[server.id] === 'logs' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+                  onClick={() => handleTabChange(server.id, 'logs')}
+                >
+                  <FileTextIcon className="mr-2 h-4 w-4 inline" />
+                  Logs
+                </button>
+              </div>
+              
+              <CardContent className="pt-6">
+                {/* Overview Tab */}
+                {(activeTab[server.id] === 'config' || activeTab[server.id] === 'logs' || !activeTab[server.id]) && (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm">
+                        <span>CPU Usage</span>
+                        <span>{server.cpu}%</span>
+                      </div>
+                      <div className="mt-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div 
+                          className="h-2 rounded-full bg-blue-500" 
+                          style={{ width: `${server.cpu}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="mt-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                      <div 
-                        className="h-2 rounded-full bg-blue-500" 
-                        style={{ width: `${server.cpu}%` }}
-                      />
+                    
+                    <div>
+                      <div className="flex justify-between text-sm">
+                        <span>Memory Usage</span>
+                        <span>{server.memory}%</span>
+                      </div>
+                      <div className="mt-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div 
+                          className="h-2 rounded-full bg-green-500" 
+                          style={{ width: `${server.memory}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        size="sm" 
+                        variant={server.status === "running" ? "secondary" : "default"}
+                        onClick={() => handleServerAction(server.id, server.status === "running" ? "stop" : "start")}
+                      >
+                        {server.status === "running" ? <StopIcon className="mr-2 h-4 w-4" /> : <PlayIcon className="mr-2 h-4 w-4" />}
+                        {server.status === "running" ? "Stop" : "Start"}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleServerAction(server.id, "restart")}
+                      >
+                        <RefreshCwIcon className="mr-2 h-4 w-4" />\n                        Restart
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm">
-                      <span>Memory Usage</span>
-                      <span>{server.memory}%</span>
-                    </div>
-                    <div className="mt-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                      <div 
-                        className="h-2 rounded-full bg-green-500" 
-                        style={{ width: `${server.memory}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      size="sm" 
-                      variant={server.status === "running" ? "secondary" : "default"}
-                      onClick={() => handleServerAction(server.id, server.status === "running" ? "stop" : "start")}
-                    >
-                      {server.status === "running" ? <StopIcon className="mr-2 h-4 w-4" /> : <PlayIcon className="mr-2 h-4 w-4" />}
-                      {server.status === "running" ? "Stop" : "Start"}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleServerAction(server.id, "restart")}
-                    >
-                      <RefreshCwIcon className="mr-2 h-4 w-4" />
-                      Restart
-                    </Button>
-                  </div>
-                </div>
+                )}
+                
+                {/* Configuration Tab */}
+                {activeTab[server.id] === 'config' && (
+                  <ServerConfig serverId={server.id} />
+                )}
+                
+                {/* Logs Tab */}
+                {activeTab[server.id] === 'logs' && (
+                  <ServerLogs serverId={server.id} />
+                )}
               </CardContent>
             </Card>
           ))}
